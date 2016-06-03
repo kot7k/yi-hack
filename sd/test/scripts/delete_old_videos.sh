@@ -5,7 +5,7 @@
 #or when you try to add a crontab with "crontab -e" it might give you an error
 #search on internet about the use of crontab
 
-dir="/home/hd1/record"
+dir="/home/hd1/record/"
 days=+15
 dt=`date +%y%m%d`
 
