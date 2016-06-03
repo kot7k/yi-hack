@@ -133,7 +133,7 @@ The telnet server is on port 23.
 Default login/password : 
 * login = root
 * password = 1234qwer  
-(unless you specified another password in yi-hack.cfg file)
+* (unless you specified another password in yi-hack.cfg file)
 
 Ftp server
 ----------
@@ -179,5 +179,6 @@ equip_test.sh
 check_motion.sh
 ---------------
 
-Script that runs from equip_test.sh and tell us if a new video was created in the last minute (a video file is created in case of motion detection)
+Script that runs from equip_test.sh and tell us if a new video was created in the last minute (a video file is created in case of motion detection).
+
 If a file is found, it adds the name of the file to the section GET /motion on the http server.
