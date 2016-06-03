@@ -28,6 +28,7 @@ The camera might throw an error if you try to run "crontab -e":
           crontab: chdir(/var/spool/cron/crontabs): No such file or directory
 Then just create that dir manually and you can edit the crontab with "crontab -e"
 Example configuration of crontab (runs the script the 15th of each month):
+```sh
 # Edit this file to introduce tasks to be run by cron.
 #
 # Each task to run has to be defined through a single line
@@ -51,3 +52,4 @@ Example configuration of crontab (runs the script the 15th of each month):
 #
 # m h  dom mon dow   command
 0 0 15 * * /home/hd1/test/scripts/delete_old_videos.sh
+```
