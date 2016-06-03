@@ -24,9 +24,11 @@ delete_old_videos.sh
 This script searchs and deletes videos older than 15 days. (You can change this value if you configure the script)
 You have to run it manually or add it to crontab for running it autmatically.
 The camera might throw an error if you try to run "crontab -e":
-          #crontab -e
+```sh
+          crontab -e
           crontab: chdir(/var/spool/cron/crontabs): No such file or directory
-Then just create that dir manually and you can edit the crontab with "crontab -e"
+```
+If that's the case just create that dir manually and you can edit the crontab with "crontab -e"
 Example configuration of crontab (runs the script the 15th of each month):
 ```sh
 # Edit this file to introduce tasks to be run by cron.
