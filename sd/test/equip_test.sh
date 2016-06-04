@@ -130,6 +130,7 @@ sysctl -w fs.mqueue.msg_max=256
 mkdir /dev/mqueue
 mount -t mqueue none /dev/mqueue
 
+###Things for cloud possibly?
 #insmod /home/cpld_wdg.ko
 #insmod /home/cpld_periph.ko
 #insmod /home/iap_auth.ko
@@ -171,7 +172,7 @@ cd /home
 ./peripheral &   
 ./dispatch &
 ./exnet &
-#./mysystem &
+#./mysystem &   (cloud?)
 	
 count=5
 
@@ -342,7 +343,7 @@ if [[ $(get_config WEB_SERVER) == "yes" ]] ; then
     ### Launch script to check for motion the last minute
     /home/hd1/test/check_motion.sh &
 else
-    log "The web server is not activated in yi-hack.cfg"
+    log "The web server is not enabled in yi-hack.cfg"
 fi
 
 sync
@@ -370,7 +371,7 @@ if [[ $(get_config RTSP_SERVER) == "yes" ]] ; then
 
     sleep 5
 else
-    log "The rtsp server is not enabled in settings."
+    log "The rtsp server is not enabled in yi-hack.conf"
 fi
 
 
@@ -405,10 +406,5 @@ led $(get_config LED_WHEN_READY)
 log "Processes after startup :"
 ps >> ${LOG_FILE}
 
-### to make sure log are written...
-
+### make sure log is written...
 sync
-
-
-
-
