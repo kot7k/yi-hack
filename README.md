@@ -29,6 +29,11 @@ This hack includes :
 * FTP server activated
 * No more (chinese) voices on startup
 
+Warning about some models that are usable only in China
+=======================================================
+
+If you have some issues to use your camera, even without this firmware, please read this webpage : https://diy.2pmc.net/solved-xiaomi-xiao-yi-ant-home-camera-can-used-china/ (more information about users issues here : https://github.com/fritz-smh/yi-hack/issues/8 )
+
 Installation on the Yi camera
 =============================
 
@@ -132,8 +137,12 @@ The telnet server is on port 23.
 
 Default login/password : 
 * login = root
+<<<<<<< HEAD
 * password = 1234qwer  
 * (unless you specified another password in yi-hack.cfg file)
+=======
+* password = 1234qwer (unless you specified another password in yi-hack.cfg file)
+>>>>>>> refs/remotes/fritz-smh/master
 
 Ftp server
 ----------
