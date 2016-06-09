@@ -8,10 +8,10 @@
 #
 # * no more cloud !
 # * network configuration done in this file. No more need to use a Xiaomi app on a smartphone!
-# * http server   : port 80
-# * telnet server : port 23
-# * ftp server    : port 21
-# * rtsp server   : port 554
+# * http server   : port 80  (Turn it on or off in yi-hack.cfg. Default is off)
+# * telnet server : port 23  (Turn it on or off in yi-hack.cfg. Default is on)
+# * ftp server    : port 21  (Turn it on or off in yi-hack.cfg. Default is on)
+# * rtsp server   : port 554  (Turn it on or off in yi-hack.cfg. Default is on)
 #      rtsp://192.168.1.121:554/ch0_0.h264     : replace with your ip
 #      rtsp://192.168.1.121:554/ch0_1.h264     : replace with your ip
 #
@@ -77,18 +77,18 @@ get_config() {
 # start of our custom script !!!!!!
 ######################################################
 
-### Launch Telnet server
-log "Start telnet server..."
-telnetd &
-
+### Launch Telnet server if it's enabled in yi-hack.cfg
+if [[ $(get_config TELNET_SERVER) == "yes" ]] ; then
+    log "Starting the telnet server..."
+    telnetd &
+else
+   log "The telnet server is not enabled in yi-hack.cfg"
+fi
 
 ### configure timezone                                                                                                                                                                               
 echo "$(get_config TIMEZONE)" > /etc/TZ             
 
 ### get time is done after wifi configuration!
-
-
-
 ### first, let's do as the orignal script does....
 
 export LD_LIBRARY_PATH=/home/libusr:$LD_LIBRARY_PATH
@@ -130,6 +130,7 @@ sysctl -w fs.mqueue.msg_max=256
 mkdir /dev/mqueue
 mount -t mqueue none /dev/mqueue
 
+###Things for cloud possibly?
 #insmod /home/cpld_wdg.ko
 #insmod /home/cpld_periph.ko
 #insmod /home/iap_auth.ko
@@ -171,7 +172,7 @@ cd /home
 ./peripheral &   
 ./dispatch &
 ./exnet &
-#./mysystem &
+#./mysystem &   (cloud?)
 	
 count=5
 
@@ -210,19 +211,9 @@ echo "Firmware letter is : '${FIRMWARE_LETTER}'" >> ${TMP_VERSION_FILE}
 cat ${TMP_VERSION_FILE} >> ${LOG_FILE}
 
 case ${FIRMWARE_LETTER} in
-    # 1.8.6.1
-    A)  # NOT TESTTED YET
-        RTSP_VERSION='M'
-        HTTP_VERSION='M'
-        ;;
-        
-    # 1.8.5.1
-    M)  # Tested :)
-        RTSP_VERSION='M'
-        HTTP_VERSION='M'
-        ;;
-        
-    L)  # Tested :)
+    # 1.8.6.1A
+    # 1.8.5.1M,N,L
+    M|N|L|A)  # M,N and L Tested :) A NOT TESTED YET
         RTSP_VERSION='M'
         HTTP_VERSION='M'
         ;;
@@ -264,8 +255,6 @@ log $(/home/wpa_supplicant -B -i ra0 -c /home/wpa_supplicant.conf )
 log "Status for wifi configuration=$?  (0 is ok)"
 
 log "Do network configuration 1/2 (ip and gateway)"
-#ifconfig ra0 192.168.1.121 netmask 255.255.255.0
-#route add default gw 192.168.1.254
 ifconfig ra0 $(get_config IP) netmask $(get_config NETMASK)
 route add default gw $(get_config GATEWAY)
 log "Done"
@@ -310,67 +299,81 @@ cd /home
 
 sync
 
-### Launch FTP server
-log "Start ftp server..."
-if [[ $(get_config DEBUG) == "yes" ]] ; then
-    tcpsvd -vE 0.0.0.0 21 ftpd -w / > /${LOG_DIR}/log_ftp.txt 2>&1 &
+### Launch FTP server if it's enabled in yi-hack.conf
+if [[ $(get_config FTP_SERVER) == "yes" ]] ; then
+    log "Starting the ftp server..."
+    if [[ $(get_config DEBUG) == "yes" ]] ; then
+    	tcpsvd -vE 0.0.0.0 21 ftpd -w / > /${LOG_DIR}/log_ftp.txt 2>&1 &
+    else
+    	tcpsvd -vE 0.0.0.0 21 ftpd -w / &
+    fi
+    sleep 1
+    log "Check for ftp process : "
+    ps | grep tcpsvd | grep -v grep >> ${LOG_FILE}
 else
-    tcpsvd -vE 0.0.0.0 21 ftpd -w / &
+   log "The FTP server is not enabled in yi-hack.cfg"
 fi
-sleep 1
-log "Check for ftp process : "
-ps | grep tcpsvd | grep -v grep >> ${LOG_FILE}
 
+### Launch web server if it's enabled in yi-hack.cfg
 
-### Launch web server
+if [[ $(get_config WEB_SERVER) == "yes" ]] ; then
+    log "Starting the web server..."
+    # first, prepare the index.html page
+    cd /home/hd1/test/http/
+    cat index.html.tpl_header ${TMP_VERSION_FILE} index.html.tpl_footer > index.html
 
-# first, prepare the index.html page
-cd /home/hd1/test/http/
-cat index.html.tpl_header ${TMP_VERSION_FILE} index.html.tpl_footer > index.html
+    # then, bind the record folder
+    mkdir /home/hd1/test/http/record/
+    mount -o bind /home/hd1/record/ /home/hd1/test/http/record/
 
-# then, bind the record folder
-mkdir /home/hd1/test/http/record/
-mount -o bind /home/hd1/record/ /home/hd1/test/http/record/
+    # prepare the GET /motion url
+    touch /home/hd1/test/http/motion
 
-# prepare the GET /motion url
-touch /home/hd1/test/http/motion
-
-# start the server
-log "Start http server : server${HTTP_VERSION}..."
-if [[ $(get_config DEBUG) == "yes" ]] ; then
-    ./server${HTTP_VERSION} 80  > /${LOG_DIR}/log_http.txt 2>&1 &
+    # start the server
+    log "Start http server : server${HTTP_VERSION}..."
+    if [[ $(get_config DEBUG) == "yes" ]] ; then
+       ./server${HTTP_VERSION} 80  > /${LOG_DIR}/log_http.txt 2>&1 &
+    else
+       ./server${HTTP_VERSION} 80 &
+    fi
+    sleep 1
+    log "Check for http server process : "
+    ps | grep server | grep -v grep | grep -v log_server >> ${LOG_FILE}
+    
+    ### Launch script to check for motion the last minute
+    /home/hd1/test/check_motion.sh &
 else
-    ./server${HTTP_VERSION} 80 &
+    log "The web server is not enabled in yi-hack.cfg"
 fi
-sleep 1
-log "Check for http server process : "
-ps | grep server | grep -v grep | grep -v log_server >> ${LOG_FILE}
 
 sync
-
-
 
 ### Launch record event
 cd /home
 ./record_event &
 ./mp4record 60 &
 
-### Launch script to check for motion the last minute
-/home/hd1/test/check_motion.sh &
 
-### Rtsp server
-cd /home/hd1/test/
-log "Start rtsp server : rtspsvr${RTSP_VERSION}..."
-if [[ $(get_config DEBUG) == "yes" ]] ; then
-    ./rtspsvr${RTSP_VERSION} > /${LOG_DIR}/log_rtsp.txt 2>&1 &
+
+### Rtsp server if it's enabled in yi-hack.cfg
+if [[ $(get_config RTSP_SERVER) == "yes" ]] ; then
+    log "Starting the rtsp server..."
+    cd /home/hd1/test/
+    log "Start rtsp server : rtspsvr${RTSP_VERSION}..."
+    if [[ $(get_config DEBUG) == "yes" ]] ; then
+       ./rtspsvr${RTSP_VERSION} > /${LOG_DIR}/log_rtsp.txt 2>&1 &
+    else
+       ./rtspsvr${RTSP_VERSION} &
+    fi
+    sleep 1
+    log "Check for rtsp process : "
+    ps | grep rtspsvr | grep -v grep >> ${LOG_FILE}
+
+    sleep 5
 else
-    ./rtspsvr${RTSP_VERSION} &
+    log "The rtsp server is not enabled in yi-hack.conf"
 fi
-sleep 1
-log "Check for rtsp process : "
-ps | grep rtspsvr | grep -v grep >> ${LOG_FILE}
 
-sleep 5
 
 ### Some configuration
 
@@ -403,10 +406,5 @@ led $(get_config LED_WHEN_READY)
 log "Processes after startup :"
 ps >> ${LOG_FILE}
 
-### to make sure log are written...
-
+### make sure log is written...
 sync
-
-
-
-
