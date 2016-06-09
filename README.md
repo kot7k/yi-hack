@@ -137,12 +137,7 @@ The telnet server is on port 23.
 
 Default login/password : 
 * login = root
-<<<<<<< HEAD
-* password = 1234qwer  
-* (unless you specified another password in yi-hack.cfg file)
-=======
 * password = 1234qwer (unless you specified another password in yi-hack.cfg file)
->>>>>>> refs/remotes/fritz-smh/master
 
 Ftp server
 ----------
